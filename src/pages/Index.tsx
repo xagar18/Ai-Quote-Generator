@@ -106,7 +106,27 @@ const Index = () => {
         { value: 'courage', label: 'Courage & Strength' },
       ];
       const selectedCategoryData = quoteCategories.find((cat) => cat.value === selectedCategory);
-      const prompt = `Generate an inspiring and meaningful quote about ${selectedCategoryData?.label}. Return only the quote text and author in this format: "Quote text" - Author Name`;
+      const promptTemplates = [
+        `Generate an inspiring quote related to ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Provide a motivational statement about ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Share a powerful and meaningful quote that relates to ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Find an insightful quote connected to ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Give me a deep and thought-provoking quote about ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Create a timeless quote that reflects the essence of ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Provide a wise and philosophical quote about ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Share an uplifting quote that brings positivity about ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Find an insightful quote that explores the depth of ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Give me a meaningful and profound quote about ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Generate a compelling quote that offers guidance about ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Provide a reflective quote that inspires action related to ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Share a quote that embodies wisdom and knowledge about ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Find a motivational quote that empowers individuals regarding ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+        `Give me a quote that challenges conventional thinking about ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
+      ];
+
+      // Select a random prompt from the array
+      const prompt = promptTemplates[Math.floor(Math.random() * promptTemplates.length)];
+      // const prompt = `Generate an inspiring and meaningful quote about ${selectedCategoryData?.label}. Return only the quote text and author in this format: "Quote text" - Author Name`;
 
       if (selectedAI === 'gemini') {
         response = await fetch(
@@ -126,6 +146,9 @@ const Index = () => {
                   ],
                 },
               ],
+              // topK: 40,
+              // topP: 0.9,
+              // candidateCount: 1,
             }),
           },
         );
