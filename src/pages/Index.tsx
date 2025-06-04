@@ -1,15 +1,21 @@
+import FavoritesManager from '@/components/FavoritesManager';
+import QuoteActions from '@/components/QuoteActions';
+import QuoteControls from '@/components/QuoteControls';
+import QuoteDisplay from '@/components/QuoteDisplay';
+import QuoteHistory from '@/components/QuoteHistory';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Loader2, Moon, Quote, Sparkles, Sun } from 'lucide-react';
+import { Moon, Quote, Sparkles, Star, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
+interface SavedQuote {
+  id: string;
+  quote: string;
+  author: string;
+  category: string;
+  timestamp: number;
+}
 
 const Index = () => {
   const [quote, setQuote] = useState('');
@@ -18,15 +24,26 @@ const Index = () => {
   const [selectedAI, setSelectedAI] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [favorites, setFavorites] = useState<SavedQuote[]>([]);
+  const [quoteHistory, setQuoteHistory] = useState<SavedQuote[]>([]);
 
-
+  // API keys - replace with your actual keys
   const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
   const OPENROUTER_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY;
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
+    const savedFavorites = localStorage.getItem('favoriteQuotes');
+    const savedHistory = localStorage.getItem('quoteHistory');
+
     if (savedTheme) {
       setIsDarkMode(savedTheme === 'dark');
+    }
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites));
+    }
+    if (savedHistory) {
+      setQuoteHistory(JSON.parse(savedHistory));
     }
   }, []);
 
@@ -38,6 +55,14 @@ const Index = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  useEffect(() => {
+    localStorage.setItem('favoriteQuotes', JSON.stringify(favorites));
+  }, [favorites]);
+
+  useEffect(() => {
+    localStorage.setItem('quoteHistory', JSON.stringify(quoteHistory));
+  }, [quoteHistory]);
 
   const aiProviders = [
     { value: 'gemini', label: 'Google Gemini' },
@@ -71,65 +96,48 @@ const Index = () => {
     try {
       let response;
       let success = false;
-      const selectedCategoryData = quoteCategories.find((cat) => cat.value === selectedCategory);
-      const variations = [
-        `Generate an inspiring and meaningful quote about "${selectedCategoryData?.label}". Make sure it is unique and distinct.`,
-        `Provide a new and original quote about "${selectedCategoryData?.label}", ensuring it is fresh and different.`,
-        `Share an insightful and inspiring quote regarding "${selectedCategoryData?.label}". Avoid repeating previously generated quotes.`,
-        `Create a new powerful quote about "${selectedCategoryData?.label}". Ensure it has a different perspective from past responses.`,
-        `Give a profound and thought-provoking quote on "${selectedCategoryData?.label}" that stands out from typical responses.`,
-        `Craft a motivational and uplifting quote that captures the essence of "${selectedCategoryData?.label}".`,
-        `Generate a timeless quote on "${selectedCategoryData?.label}" that offers a unique perspective.`,
-        `Write an eye-opening quote about "${selectedCategoryData?.label}" that challenges conventional wisdom.`,
-        `Create a quote that reflects deep wisdom about "${selectedCategoryData?.label}" and offers inspiration.`,
-        `Share an unconventional yet powerful quote about "${selectedCategoryData?.label}".`,
-        `Generate a rare and little-known quote that beautifully captures the meaning of "${selectedCategoryData?.label}".`,
-        `Provide a quote that is poetic yet profound about "${selectedCategoryData?.label}".`,
-        `Write a quote that carries a strong message about "${selectedCategoryData?.label}" with clarity and depth.`,
-        `Generate a compelling quote about "${selectedCategoryData?.label}" that sparks curiosity and reflection.`,
-        `Give a fresh and emotionally resonant quote about "${selectedCategoryData?.label}".`,
+      const quoteCategories = [
+        { value: 'motivation', label: 'Motivation & Success' },
+        { value: 'wisdom', label: 'Wisdom & Philosophy' },
+        { value: 'love', label: 'Love & Relationships' },
+        { value: 'leadership', label: 'Leadership & Growth' },
+        { value: 'inspiration', label: 'Daily Inspiration' },
+        { value: 'life', label: 'Life & Happiness' },
+        { value: 'creativity', label: 'Creativity & Innovation' },
+        { value: 'courage', label: 'Courage & Strength' },
       ];
-
-      const prompt = variations[Math.floor(Math.random() * variations.length)];
+      const selectedCategoryData = quoteCategories.find((cat) => cat.value === selectedCategory);
+      const prompt = `Generate an inspiring and meaningful quote about ${selectedCategoryData?.label}. Return only the quote text and author in this format: "Quote text" - Author Name`;
 
       if (selectedAI === 'gemini') {
-        try {
-          const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                contents: [
-                  {
-                    parts: [
-                      {
-                        text: prompt,
-                      },
-                    ],
-                  },
-                ],
-              }),
+        response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          );
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: prompt,
+                    },
+                  ],
+                },
+              ],
+            }),
+          },
+        );
 
-          if (!response.ok) {
-            throw new Error(`HTTP Error! Status: ${response.status}`);
-          }
-
+        if (response.ok) {
           const data = await response.json();
-          const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
+          const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
           if (generatedText) {
             parseQuoteResponse(generatedText);
             success = true;
-          } else {
-            console.warn('No valid response received from Gemini.');
           }
-        } catch (error) {
-          console.error('Error fetching AI response:', error);
         }
       } else if (selectedAI === 'deepseek') {
         response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -177,13 +185,97 @@ const Index = () => {
   const parseQuoteResponse = (text: string) => {
     const match = text.match(/"([^"]+)"\s*-\s*(.+)/);
     if (match) {
-      setQuote(match[1]);
-      setAuthor(match[2]);
+      const newQuote = match[1];
+      const newAuthor = match[2];
+      setQuote(newQuote);
+      setAuthor(newAuthor);
+
+      // Add to history
+      const newHistoryItem: SavedQuote = {
+        id: Date.now().toString(),
+        quote: newQuote,
+        author: newAuthor,
+        category: selectedCategory,
+        timestamp: Date.now(),
+      };
+
+      setQuoteHistory((prev) => [newHistoryItem, ...prev.slice(0, 4)]);
     } else {
       setQuote(text.trim());
       setAuthor('AI Generated');
+
+      // Add to history
+      const newHistoryItem: SavedQuote = {
+        id: Date.now().toString(),
+        quote: text.trim(),
+        author: 'AI Generated',
+        category: selectedCategory,
+        timestamp: Date.now(),
+      };
+
+      setQuoteHistory((prev) => [newHistoryItem, ...prev.slice(0, 4)]);
     }
   };
+
+  const copyToClipboard = () => {
+    if (quote) {
+      navigator.clipboard.writeText(`"${quote}" - ${author}`);
+      toast.success('Quote copied to clipboard!');
+    }
+  };
+
+  const toggleFavorite = () => {
+    if (quote) {
+      const quoteId = `${quote}-${author}`;
+      const isAlreadyFavorite = favorites.some((fav) => fav.id === quoteId);
+
+      if (isAlreadyFavorite) {
+        setFavorites((prev) => prev.filter((fav) => fav.id !== quoteId));
+        toast.success('Removed from favorites');
+      } else {
+        const newFavorite: SavedQuote = {
+          id: quoteId,
+          quote,
+          author,
+          category: selectedCategory,
+          timestamp: Date.now(),
+        };
+        setFavorites((prev) => [...prev, newFavorite]);
+        toast.success('Added to favorites');
+      }
+    }
+  };
+
+  const showRandomFavorite = () => {
+    if (favorites.length > 0) {
+      const randomIndex = Math.floor(Math.random() * favorites.length);
+      const randomFavorite = favorites[randomIndex];
+      setQuote(randomFavorite.quote);
+      setAuthor(randomFavorite.author);
+      toast.success('Random favorite quote loaded!');
+    } else {
+      toast.error('No favorite quotes saved yet!');
+    }
+  };
+
+  const loadHistoryQuote = (historyQuote: SavedQuote) => {
+    setQuote(historyQuote.quote);
+    setAuthor(historyQuote.author);
+    toast.success('Quote loaded from history!');
+  };
+
+  const clearFavorites = () => {
+    setFavorites([]);
+    toast.success('All favorites cleared!');
+  };
+
+  const clearHistory = () => {
+    setQuoteHistory([]);
+    toast.success('Quote history cleared!');
+  };
+
+  const currentQuoteId = quote ? `${quote}-${author}` : '';
+  const isFavorite = favorites.some((fav) => fav.id === currentQuoteId);
 
   return (
     <div
@@ -193,36 +285,69 @@ const Index = () => {
           : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'
       }`}
     >
-      {/* Background decoration */}
+      {/* Enhanced background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div
-          className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-20 ${
+          className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-20 floating-animation ${
             isDarkMode ? 'bg-purple-500' : 'bg-blue-400'
           }`}
         ></div>
         <div
-          className={`absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl opacity-20 ${
+          className={`absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl opacity-20 floating-animation-delayed ${
             isDarkMode ? 'bg-blue-500' : 'bg-purple-400'
           }`}
         ></div>
+        <div
+          className={`absolute top-1/2 left-1/2 w-64 h-64 rounded-full blur-2xl opacity-10 particle-float ${
+            isDarkMode ? 'bg-pink-500' : 'bg-indigo-400'
+          }`}
+        ></div>
+
+        {/* Floating particles */}
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className={`absolute w-2 h-2 rounded-full opacity-30 particle-float ${
+              isDarkMode ? 'bg-purple-400' : 'bg-indigo-400'
+            }`}
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 8}s`,
+              animationDuration: `${8 + Math.random() * 4}s`,
+            }}
+          ></div>
+        ))}
       </div>
 
       <div className="relative z-10 container mx-auto px-4 py-16 max-w-4xl">
-        {/* Header */}
+        {/* Enhanced Header */}
         <div className="text-center mb-16">
           <div className="flex justify-center items-center gap-4 mb-8">
             <div className="relative">
               <Quote
-                className={`w-12 h-12 ${isDarkMode ? 'text-purple-400' : 'text-indigo-600'}`}
+                className={`w-16 h-16 ${isDarkMode ? 'text-purple-400' : 'text-indigo-600'}`}
               />
               <div
-                className={`absolute inset-0 w-12 h-12 blur-xl opacity-40 ${
+                className={`absolute inset-0 w-16 h-16 blur-xl opacity-60 ${
                   isDarkMode ? 'bg-purple-400' : 'bg-indigo-400'
                 } animate-pulse`}
               ></div>
+              {/* Orbiting stars */}
+              <Star
+                className={`absolute -top-2 -right-2 w-4 h-4 ${
+                  isDarkMode ? 'text-yellow-400' : 'text-yellow-500'
+                } animate-spin`}
+                style={{ animationDuration: '8s' }}
+              />
+              <Sparkles
+                className={`absolute -bottom-2 -left-2 w-4 h-4 ${
+                  isDarkMode ? 'text-pink-400' : 'text-pink-500'
+                } animate-pulse`}
+              />
             </div>
             <h1
-              className={`text-5xl font-bold bg-gradient-to-r ${
+              className={`text-6xl font-bold bg-gradient-to-r ${
                 isDarkMode
                   ? 'from-purple-400 via-pink-400 to-blue-400'
                   : 'from-indigo-600 via-purple-600 to-blue-600'
@@ -232,192 +357,92 @@ const Index = () => {
             </h1>
           </div>
           <p
-            className={`text-xl ${
+            className={`text-2xl ${
               isDarkMode ? 'text-slate-300' : 'text-slate-600'
-            } max-w-2xl mx-auto`}
+            } max-w-3xl mx-auto mb-8 leading-relaxed`}
           >
-            Generate inspiring quotes powered by advanced AI technology
+            Generate inspiring quotes powered by advanced AI technology with beautiful animations
+            and enhanced features
           </p>
 
-          {/* Theme Toggle */}
           <Button
             variant="outline"
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`mt-8 group ${
+            className={`group ${
               isDarkMode
-                ? 'border-slate-600 hover:bg-slate-800 text-slate-300 hover:text-white'
-                : 'border-slate-300 hover:bg-slate-100 text-slate-700 hover:text-slate-900'
-            } transition-all duration-300 px-6 py-3`}
+                ? 'border-slate-600 hover:bg-slate-800 text-slate-300 hover:text-white hover:border-purple-400'
+                : 'border-slate-300 hover:bg-slate-100 text-slate-700 hover:text-slate-900 hover:border-indigo-400'
+            } transition-all duration-500 px-8 py-4 text-lg hover:scale-105 hover:shadow-xl`}
           >
             {isDarkMode ? (
-              <Sun className="w-5 h-5 mr-2 group-hover:rotate-180 transition-transform duration-500" />
+              <Sun className="w-6 h-6 mr-3 group-hover:rotate-180 transition-transform duration-700" />
             ) : (
-              <Moon className="w-5 h-5 mr-2 group-hover:-rotate-12 transition-transform duration-300" />
+              <Moon className="w-6 h-6 mr-3 group-hover:-rotate-12 transition-transform duration-500" />
             )}
             {isDarkMode ? 'Light Mode' : 'Dark Mode'}
           </Button>
         </div>
 
-        {/* Main Card */}
+        {/* Enhanced Main Card */}
         <Card
           className={`${
             isDarkMode
-              ? 'bg-slate-800/40 border-slate-700/50 shadow-2xl shadow-purple-500/10'
-              : 'bg-white/60 border-slate-200/50 shadow-2xl shadow-indigo-500/10'
-          } backdrop-blur-xl transition-all duration-500 hover:shadow-3xl border-2`}
+              ? 'bg-slate-800/40 border-slate-700/50 shadow-2xl shadow-purple-500/20'
+              : 'bg-white/70 border-slate-200/50 shadow-2xl shadow-indigo-500/20'
+          } backdrop-blur-xl transition-all duration-500 hover:shadow-3xl border-2 relative overflow-hidden`}
         >
-          <CardContent className="p-10 space-y-10">
+          {/* Animated border glow */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/20 to-purple-500/0 opacity-0 hover:opacity-100 transition-opacity duration-1000"></div>
+
+          <CardContent className="relative p-12 space-y-12">
             {/* Controls */}
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* AI Provider */}
-              <div className="space-y-4">
-                <label
-                  className={`text-lg font-semibold ${
-                    isDarkMode ? 'text-slate-200' : 'text-slate-700'
-                  } flex items-center gap-3`}
-                >
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      isDarkMode ? 'bg-purple-400' : 'bg-indigo-500'
-                    } animate-pulse`}
-                  ></div>
-                  AI Provider
-                </label>
-                <Select value={selectedAI} onValueChange={setSelectedAI}>
-                  <SelectTrigger
-                    className={`h-14 text-lg ${
-                      isDarkMode
-                        ? 'bg-slate-700/50 border-slate-600 text-white hover:bg-slate-700'
-                        : 'bg-white/80 border-slate-300 text-slate-900 hover:bg-white'
-                    } transition-all duration-300 focus:ring-2 ${
-                      isDarkMode ? 'focus:ring-purple-500' : 'focus:ring-indigo-500'
-                    } backdrop-blur-sm`}
-                  >
-                    <SelectValue placeholder="Choose AI provider" />
-                  </SelectTrigger>
-                  <SelectContent
-                    className={`${
-                      isDarkMode
-                        ? 'bg-slate-800 border-slate-700 backdrop-blur-xl'
-                        : 'bg-white border-slate-300 backdrop-blur-xl'
-                    }`}
-                  >
-                    {aiProviders.map((provider) => (
-                      <SelectItem
-                        key={provider.value}
-                        value={provider.value}
-                        className={`text-lg py-3 ${
-                          isDarkMode
-                            ? 'text-white hover:bg-slate-700 focus:bg-slate-700'
-                            : 'text-slate-900 hover:bg-slate-100 focus:bg-slate-100'
-                        } transition-colors cursor-pointer`}
-                      >
-                        {provider.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <QuoteControls
+              selectedAI={selectedAI}
+              selectedCategory={selectedCategory}
+              isDarkMode={isDarkMode}
+              onAIChange={setSelectedAI}
+              onCategoryChange={setSelectedCategory}
+            />
 
-              {/* Category */}
-              <div className="space-y-4">
-                <label
-                  className={`text-lg font-semibold ${
-                    isDarkMode ? 'text-slate-200' : 'text-slate-700'
-                  } flex items-center gap-3`}
-                >
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      isDarkMode ? 'bg-pink-400' : 'bg-purple-500'
-                    } animate-pulse`}
-                  ></div>
-                  Quote Category
-                </label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger
-                    className={`h-14 text-lg ${
-                      isDarkMode
-                        ? 'bg-slate-700/50 border-slate-600 text-white hover:bg-slate-700'
-                        : 'bg-white/80 border-slate-300 text-slate-900 hover:bg-white'
-                    } transition-all duration-300 focus:ring-2 ${
-                      isDarkMode ? 'focus:ring-pink-500' : 'focus:ring-purple-500'
-                    } backdrop-blur-sm`}
-                  >
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent
-                    className={`${
-                      isDarkMode
-                        ? 'bg-slate-800 border-slate-700 backdrop-blur-xl'
-                        : 'bg-white border-slate-300 backdrop-blur-xl'
-                    }`}
-                  >
-                    {quoteCategories.map((category) => (
-                      <SelectItem
-                        key={category.value}
-                        value={category.value}
-                        className={`text-lg py-3 ${
-                          isDarkMode
-                            ? 'text-white hover:bg-slate-700 focus:bg-slate-700'
-                            : 'text-slate-900 hover:bg-slate-100 focus:bg-slate-100'
-                        } transition-colors cursor-pointer`}
-                      >
-                        {category.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Generate Button */}
-            <Button
-              onClick={generateQuote}
-              disabled={isLoading || !selectedAI || !selectedCategory}
-              className={`w-full h-16 text-xl font-bold ${
-                isDarkMode
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
-                  : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700'
-              } text-white shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:scale-100`}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-6 h-6 animate-spin mr-3" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-6 h-6 mr-3" />
-                  Generate Quote
-                </>
-              )}
-            </Button>
+            {/* Action Buttons */}
+            <QuoteActions
+              isLoading={isLoading}
+              selectedAI={selectedAI}
+              selectedCategory={selectedCategory}
+              favoritesCount={favorites.length}
+              isDarkMode={isDarkMode}
+              onGenerate={generateQuote}
+              onRandomFavorite={showRandomFavorite}
+            />
 
             {/* Quote Display */}
-            {quote && (
-              <div
-                className={`mt-12 p-8 rounded-2xl border-l-4 ${
-                  isDarkMode
-                    ? 'bg-gradient-to-r from-slate-700/30 to-slate-800/30 border-purple-400 shadow-lg shadow-purple-500/20'
-                    : 'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-500 shadow-lg shadow-indigo-500/20'
-                } transform transition-all duration-700 animate-fade-in backdrop-blur-sm`}
-              >
-                <blockquote
-                  className={`text-2xl leading-relaxed mb-8 font-medium italic ${
-                    isDarkMode ? 'text-slate-100' : 'text-slate-800'
-                  }`}
-                >
-                  "{quote}"
-                </blockquote>
-                <cite
-                  className={`text-xl font-bold ${
-                    isDarkMode ? 'text-purple-300' : 'text-indigo-600'
-                  }`}
-                >
-                  — {author}
-                </cite>
-              </div>
-            )}
+            <QuoteDisplay
+              quote={quote}
+              author={author}
+              isDarkMode={isDarkMode}
+              isFavorite={isFavorite}
+              onCopy={copyToClipboard}
+              onToggleFavorite={toggleFavorite}
+            />
+
+            {/* Favorites Manager */}
+            <FavoritesManager
+              favorites={favorites}
+              isDarkMode={isDarkMode}
+              onClearFavorites={clearFavorites}
+            />
+
+            {/* Quote History */}
+            <QuoteHistory
+              quoteHistory={quoteHistory}
+              isDarkMode={isDarkMode}
+              onLoadHistoryQuote={loadHistoryQuote}
+              onClearHistory={clearHistory}
+            />
+            {/* Footer */}
+            <footer className="text-center text-sm text-slate-500 dark:text-slate-400 mt-16">
+              <p>Made with ❤️ by sagar</p>
+            </footer>
           </CardContent>
         </Card>
       </div>
