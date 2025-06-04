@@ -27,7 +27,7 @@ const Index = () => {
   const [favorites, setFavorites] = useState<SavedQuote[]>([]);
   const [quoteHistory, setQuoteHistory] = useState<SavedQuote[]>([]);
 
-  // API keys - replace with your actual keys
+ 
   const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
   const OPENROUTER_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY;
 
