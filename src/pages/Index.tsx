@@ -27,7 +27,6 @@ const Index = () => {
   const [favorites, setFavorites] = useState<SavedQuote[]>([]);
   const [quoteHistory, setQuoteHistory] = useState<SavedQuote[]>([]);
 
- 
   const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
   const OPENROUTER_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY;
 
@@ -154,7 +153,7 @@ const Index = () => {
                 content: prompt,
               },
             ],
-            temperature: 0.8,
+            temperature: 1,
             max_tokens: 150,
           }),
         });
