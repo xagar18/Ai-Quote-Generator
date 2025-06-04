@@ -19,7 +19,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // API keys - replace with your actual keys
+
   const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
   const OPENROUTER_API_KEY = import.meta.env.VITE_DEEPSEEK_API_KEY;
 
