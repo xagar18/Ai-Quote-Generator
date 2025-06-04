@@ -322,11 +322,13 @@ const Index = () => {
 
       <div className="relative z-10 container mx-auto px-4 py-16 max-w-4xl">
         {/* Enhanced Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-6">
           <div className="flex justify-center items-center gap-4 mb-8">
             <div className="relative">
               <Quote
-                className={`w-16 h-16 ${isDarkMode ? 'text-purple-400' : 'text-indigo-600'}`}
+                className={`md:w-16 w-8 h-8 md:h-16 ${
+                  isDarkMode ? 'text-purple-400' : 'text-indigo-600'
+                }`}
               />
               <div
                 className={`absolute inset-0 w-16 h-16 blur-xl opacity-60 ${
@@ -335,19 +337,19 @@ const Index = () => {
               ></div>
               {/* Orbiting stars */}
               <Star
-                className={`absolute -top-2 -right-2 w-4 h-4 ${
+                className={`absolute -top-2 -right-2 md:w-4 w-3 h-3 md:h-4 ${
                   isDarkMode ? 'text-yellow-400' : 'text-yellow-500'
                 } animate-spin`}
                 style={{ animationDuration: '8s' }}
               />
               <Sparkles
-                className={`absolute -bottom-2 -left-2 w-4 h-4 ${
+                className={`absolute -bottom-4 -left-2 w-4 h-4 ${
                   isDarkMode ? 'text-pink-400' : 'text-pink-500'
                 } animate-pulse`}
               />
             </div>
             <h1
-              className={`text-6xl font-bold bg-gradient-to-r ${
+              className={`md:text-6xl font-bold bg-gradient-to-r ${
                 isDarkMode
                   ? 'from-purple-400 via-pink-400 to-blue-400'
                   : 'from-indigo-600 via-purple-600 to-blue-600'
@@ -357,9 +359,9 @@ const Index = () => {
             </h1>
           </div>
           <p
-            className={`text-2xl ${
+            className={`md:text-2xl ${
               isDarkMode ? 'text-slate-300' : 'text-slate-600'
-            } max-w-3xl mx-auto mb-8 leading-relaxed`}
+            } max-w-3xl mx-auto md:mb-8  mb-3 leading-relaxed`}
           >
             Generate inspiring quotes powered by advanced AI technology with beautiful animations
             and enhanced features
@@ -372,12 +374,12 @@ const Index = () => {
               isDarkMode
                 ? 'border-slate-600 hover:bg-slate-800 text-slate-300 hover:text-white hover:border-purple-400'
                 : 'border-slate-300 hover:bg-slate-100 text-slate-700 hover:text-slate-900 hover:border-indigo-400'
-            } transition-all duration-500 px-8 py-4 text-lg hover:scale-105 hover:shadow-xl`}
+            } transition-all duration-500 md:px-8 md:py-4 text-[13px] md:text-lg hover:scale-105 hover:shadow-xl mb-0`}
           >
             {isDarkMode ? (
-              <Sun className="w-6 h-6 mr-3 group-hover:rotate-180 transition-transform duration-700" />
+              <Sun className="md:w-6 md:h-6 h-3 w-3 mr-3 group-hover:rotate-180 transition-transform duration-700" />
             ) : (
-              <Moon className="w-6 h-6 mr-3 group-hover:-rotate-12 transition-transform duration-500" />
+              <Moon className="md:w-6 md:h-6 mr-3 group-hover:-rotate-12 transition-transform duration-500" />
             )}
             {isDarkMode ? 'Light Mode' : 'Dark Mode'}
           </Button>

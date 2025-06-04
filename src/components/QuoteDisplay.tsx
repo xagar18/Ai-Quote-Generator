@@ -105,39 +105,33 @@ const QuoteDisplay: React.FC<QuoteDisplayProps> = ({
   };
 
   return (
-    <div className="mt-12 relative">
-      {/* Decorative elements adjusted */}
-      <div className="absolute -top-4 -left-4 w-24 h-24 rounded-full bg-gradient-to-br from-purple-400/20 to-pink-400/20 blur-xl animate-pulse pointer-events-none"></div>
-      <div className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full bg-gradient-to-br from-blue-400/20 to-indigo-400/20 blur-xl animate-pulse delay-1000 pointer-events-none"></div>
+    <div className="mt-6 p-4 sm:p-8 rounded-3xl border-l-4 backdrop-blur-xl overflow-hidden z-10 max-w-screen-sm mx-auto">
+      <blockquote className="relative text-lg sm:text-2xl md:text-3xl leading-relaxed mb-6 sm:mb-8 font-serif italic text-center">
+        <span className="relative z-10 break-words">{quote}</span>
+      </blockquote>
 
-      <div className="relative p-8 rounded-3xl border-l-4 backdrop-blur-xl overflow-hidden z-10">
-        <blockquote className="relative text-2xl md:text-3xl leading-relaxed mb-8 font-serif italic">
-          <span className="relative z-10">{quote}</span>
-        </blockquote>
+      <cite className="text-md sm:text-lg md:text-xl font-bold flex items-center justify-center gap-2">
+        <div className="w-6 h-0.5"></div>
+        {author}
+      </cite>
 
-        <cite className="text-xl md:text-2xl font-bold flex items-center gap-2">
-          <div className="w-8 h-0.5"></div>
-          {author}
-        </cite>
-
-        {/* Buttons with z-10 */}
-        <div className="flex flex-wrap gap-3 mt-8 z-10">
-          <Button onClick={onCopy} variant="outline" size="sm">
-            <Copy className="w-4 h-4 mr-2" /> Copy
-          </Button>
-          <Button onClick={shareQuote} variant="outline" size="sm">
-            <Share2 className="w-4 h-4 mr-2" /> Share
-          </Button>
-          <Button onClick={speakQuote} variant="outline" size="sm">
-            <Volume2 className="w-4 h-4 mr-2" /> Listen
-          </Button>
-          <Button onClick={onToggleFavorite} variant="outline" size="sm">
-            <Heart className="w-4 h-4 mr-2" /> {isFavorite ? 'Unfavorite' : 'Favorite'}
-          </Button>
-          <Button onClick={downloadQuote} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" /> Download
-          </Button>
-        </div>
+      {/* Mobile-friendly buttons */}
+      <div className="flex flex-wrap justify-center gap-3 mt-6 sm:mt-8">
+        <Button onClick={onCopy} variant="outline" size="sm">
+          <Copy className="w-4 h-4 mr-2" /> Copy
+        </Button>
+        <Button onClick={shareQuote} variant="outline" size="sm">
+          <Share2 className="w-4 h-4 mr-2" /> Share
+        </Button>
+        <Button onClick={speakQuote} variant="outline" size="sm">
+          <Volume2 className="w-4 h-4 mr-2" /> Listen
+        </Button>
+        <Button onClick={onToggleFavorite} variant="outline" size="sm">
+          <Heart className="w-4 h-4 mr-2" /> {isFavorite ? 'Unfavorite' : 'Favorite'}
+        </Button>
+        <Button onClick={downloadQuote} variant="outline" size="sm">
+          <Download className="w-4 h-4 mr-2" /> Download
+        </Button>
       </div>
     </div>
   );
