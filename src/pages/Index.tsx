@@ -105,7 +105,7 @@ const Index = () => {
         { value: 'creativity', label: 'Creativity & Innovation' },
         { value: 'courage', label: 'Courage & Strength' },
       ];
-      const selectedCategoryData = quoteCategories.find((cat) => cat.value === selectedCategory);
+      const selectedCategoryData = quoteCategories.find(cat => cat.value === selectedCategory);
       const promptTemplates = [
         `Generate an inspiring quote related to ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
         `Provide a motivational statement about ${selectedCategoryData?.label}. Format: "Quote text" - Author Name`,
@@ -130,7 +130,7 @@ const Index = () => {
 
       if (selectedAI === 'gemini') {
         response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
           {
             method: 'POST',
             headers: {
@@ -146,9 +146,6 @@ const Index = () => {
                   ],
                 },
               ],
-              // topK: 40,
-              // topP: 0.9,
-              // candidateCount: 1,
             }),
           },
         );
@@ -221,7 +218,7 @@ const Index = () => {
         timestamp: Date.now(),
       };
 
-      setQuoteHistory((prev) => [newHistoryItem, ...prev.slice(0, 4)]);
+      setQuoteHistory(prev => [newHistoryItem, ...prev.slice(0, 4)]);
     } else {
       setQuote(text.trim());
       setAuthor('AI Generated');
@@ -235,7 +232,7 @@ const Index = () => {
         timestamp: Date.now(),
       };
 
-      setQuoteHistory((prev) => [newHistoryItem, ...prev.slice(0, 4)]);
+      setQuoteHistory(prev => [newHistoryItem, ...prev.slice(0, 4)]);
     }
   };
 
@@ -249,10 +246,10 @@ const Index = () => {
   const toggleFavorite = () => {
     if (quote) {
       const quoteId = `${quote}-${author}`;
-      const isAlreadyFavorite = favorites.some((fav) => fav.id === quoteId);
+      const isAlreadyFavorite = favorites.some(fav => fav.id === quoteId);
 
       if (isAlreadyFavorite) {
-        setFavorites((prev) => prev.filter((fav) => fav.id !== quoteId));
+        setFavorites(prev => prev.filter(fav => fav.id !== quoteId));
         toast.success('Removed from favorites');
       } else {
         const newFavorite: SavedQuote = {
@@ -262,7 +259,7 @@ const Index = () => {
           category: selectedCategory,
           timestamp: Date.now(),
         };
-        setFavorites((prev) => [...prev, newFavorite]);
+        setFavorites(prev => [...prev, newFavorite]);
         toast.success('Added to favorites');
       }
     }
@@ -297,7 +294,7 @@ const Index = () => {
   };
 
   const currentQuoteId = quote ? `${quote}-${author}` : '';
-  const isFavorite = favorites.some((fav) => fav.id === currentQuoteId);
+  const isFavorite = favorites.some(fav => fav.id === currentQuoteId);
 
   return (
     <div
